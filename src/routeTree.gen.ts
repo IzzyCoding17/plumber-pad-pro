@@ -10,6 +10,9 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as FindAPlumberRouteImport } from './routes/find-a-plumber'
+import { Route as CustomerAuthRouteImport } from './routes/customer-auth'
+import { Route as CustomerRouteImport } from './routes/customer'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
@@ -24,11 +27,27 @@ import { Route as AuthenticatedPaymentsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedMessagesRouteImport } from './routes/_authenticated/messages'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedCustomersRouteImport } from './routes/_authenticated/customers'
+import { Route as CustomerRequestPlumberIdRouteImport } from './routes/customer.request.$plumberId'
 import { Route as AuthenticatedCustomersIdRouteImport } from './routes/_authenticated/customers.$id'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FindAPlumberRoute = FindAPlumberRouteImport.update({
+  id: '/find-a-plumber',
+  path: '/find-a-plumber',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CustomerAuthRoute = CustomerAuthRouteImport.update({
+  id: '/customer-auth',
+  path: '/customer-auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CustomerRoute = CustomerRouteImport.update({
+  id: '/customer',
+  path: '/customer',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -100,6 +119,12 @@ const AuthenticatedCustomersRoute = AuthenticatedCustomersRouteImport.update({
   path: '/customers',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const CustomerRequestPlumberIdRoute =
+  CustomerRequestPlumberIdRouteImport.update({
+    id: '/request/$plumberId',
+    path: '/request/$plumberId',
+    getParentRoute: () => CustomerRoute,
+  } as any)
 const AuthenticatedCustomersIdRoute =
   AuthenticatedCustomersIdRouteImport.update({
     id: '/$id',
@@ -110,6 +135,9 @@ const AuthenticatedCustomersIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/customer': typeof CustomerRouteWithChildren
+  '/customer-auth': typeof CustomerAuthRoute
+  '/find-a-plumber': typeof FindAPlumberRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/customers': typeof AuthenticatedCustomersRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -123,10 +151,14 @@ export interface FileRoutesByFullPath {
   '/pay/$jobId': typeof PayJobIdRoute
   '/r/$slug': typeof RSlugRoute
   '/customers/$id': typeof AuthenticatedCustomersIdRoute
+  '/customer/request/$plumberId': typeof CustomerRequestPlumberIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/customer': typeof CustomerRouteWithChildren
+  '/customer-auth': typeof CustomerAuthRoute
+  '/find-a-plumber': typeof FindAPlumberRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/customers': typeof AuthenticatedCustomersRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -140,12 +172,16 @@ export interface FileRoutesByTo {
   '/pay/$jobId': typeof PayJobIdRoute
   '/r/$slug': typeof RSlugRoute
   '/customers/$id': typeof AuthenticatedCustomersIdRoute
+  '/customer/request/$plumberId': typeof CustomerRequestPlumberIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/customer': typeof CustomerRouteWithChildren
+  '/customer-auth': typeof CustomerAuthRoute
+  '/find-a-plumber': typeof FindAPlumberRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/customers': typeof AuthenticatedCustomersRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
@@ -159,12 +195,16 @@ export interface FileRoutesById {
   '/pay/$jobId': typeof PayJobIdRoute
   '/r/$slug': typeof RSlugRoute
   '/_authenticated/customers/$id': typeof AuthenticatedCustomersIdRoute
+  '/customer/request/$plumberId': typeof CustomerRequestPlumberIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/auth'
+    | '/customer'
+    | '/customer-auth'
+    | '/find-a-plumber'
     | '/sitemap.xml'
     | '/customers'
     | '/dashboard'
@@ -178,10 +218,14 @@ export interface FileRouteTypes {
     | '/pay/$jobId'
     | '/r/$slug'
     | '/customers/$id'
+    | '/customer/request/$plumberId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
+    | '/customer'
+    | '/customer-auth'
+    | '/find-a-plumber'
     | '/sitemap.xml'
     | '/customers'
     | '/dashboard'
@@ -195,11 +239,15 @@ export interface FileRouteTypes {
     | '/pay/$jobId'
     | '/r/$slug'
     | '/customers/$id'
+    | '/customer/request/$plumberId'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/customer'
+    | '/customer-auth'
+    | '/find-a-plumber'
     | '/sitemap.xml'
     | '/_authenticated/customers'
     | '/_authenticated/dashboard'
@@ -213,12 +261,16 @@ export interface FileRouteTypes {
     | '/pay/$jobId'
     | '/r/$slug'
     | '/_authenticated/customers/$id'
+    | '/customer/request/$plumberId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  CustomerRoute: typeof CustomerRouteWithChildren
+  CustomerAuthRoute: typeof CustomerAuthRoute
+  FindAPlumberRoute: typeof FindAPlumberRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   PayJobIdRoute: typeof PayJobIdRoute
   RSlugRoute: typeof RSlugRoute
@@ -231,6 +283,27 @@ declare module '@tanstack/react-router' {
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/find-a-plumber': {
+      id: '/find-a-plumber'
+      path: '/find-a-plumber'
+      fullPath: '/find-a-plumber'
+      preLoaderRoute: typeof FindAPlumberRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/customer-auth': {
+      id: '/customer-auth'
+      path: '/customer-auth'
+      fullPath: '/customer-auth'
+      preLoaderRoute: typeof CustomerAuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/customer': {
+      id: '/customer'
+      path: '/customer'
+      fullPath: '/customer'
+      preLoaderRoute: typeof CustomerRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -331,6 +404,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCustomersRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/customer/request/$plumberId': {
+      id: '/customer/request/$plumberId'
+      path: '/request/$plumberId'
+      fullPath: '/customer/request/$plumberId'
+      preLoaderRoute: typeof CustomerRequestPlumberIdRouteImport
+      parentRoute: typeof CustomerRoute
+    }
     '/_authenticated/customers/$id': {
       id: '/_authenticated/customers/$id'
       path: '/$id'
@@ -382,10 +462,25 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface CustomerRouteChildren {
+  CustomerRequestPlumberIdRoute: typeof CustomerRequestPlumberIdRoute
+}
+
+const CustomerRouteChildren: CustomerRouteChildren = {
+  CustomerRequestPlumberIdRoute: CustomerRequestPlumberIdRoute,
+}
+
+const CustomerRouteWithChildren = CustomerRoute._addFileChildren(
+  CustomerRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  CustomerRoute: CustomerRouteWithChildren,
+  CustomerAuthRoute: CustomerAuthRoute,
+  FindAPlumberRoute: FindAPlumberRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   PayJobIdRoute: PayJobIdRoute,
   RSlugRoute: RSlugRoute,
