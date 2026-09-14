@@ -23,6 +23,12 @@ export const Route = createFileRoute("/customer")({
   beforeLoad: async () => {
     const { data } = await supabase.auth.getUser();
     if (!data.user) throw redirect({ to: "/customer-auth" });
+    const { data: customerProfile } = await (supabase as any)
+      .from("customer_profiles")
+      .select("id")
+      .eq("id", data.user.id)
+      .maybeSingle();
+    if (!customerProfile) throw redirect({ to: "/auth" });
   },
   component: CustomerHome,
 });

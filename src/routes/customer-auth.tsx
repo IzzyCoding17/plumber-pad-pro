@@ -36,7 +36,18 @@ function CustomerAuth() {
       if (mode === "signup" && !result.data.session) {
         toast.success("Account created. Check your email to verify it, then sign in.");
         setMode("signin");
-      } else navigate({ to: "/customer" });
+      } else {
+        const { data: customerProfile } = await (supabase as any)
+          .from("customer_profiles")
+          .select("id")
+          .eq("id", result.data.user?.id ?? "")
+          .maybeSingle();
+        if (!customerProfile) {
+          await supabase.auth.signOut();
+          throw new Error("This is a worker account. Use Worker sign in instead.");
+        }
+        navigate({ to: "/customer" });
+      }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Authentication failed");
     } finally {
