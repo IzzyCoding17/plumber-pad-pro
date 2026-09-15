@@ -21,11 +21,12 @@ export const Route = createFileRoute("/auth")({
 function AuthPage() {
   const search = Route.useSearch();
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"signin" | "signup">(search.mode ?? "signin");
+  const [mode, setMode] = useState<"signin" | "signup" | "reset">(search.mode ?? "signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [businessName, setBusinessName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [confirmationSent, setConfirmationSent] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -37,9 +38,19 @@ function AuthPage() {
     e.preventDefault();
     setLoading(true);
     try {
+      if (mode === "reset") {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/reset-password?portal=worker`,
+        });
+        if (error) throw error;
+        toast.success("If that email exists, a password reset link is on its way.");
+        setMode("signin");
+        return;
+      }
       if (mode === "signup") {
         const { error } = await supabase.auth.signUp({
-          email, password,
+          email,
+          password,
           options: {
             emailRedirectTo: `${window.location.origin}/dashboard`,
             data: { business_name: businessName || "My Plumbing Co" },
@@ -47,7 +58,8 @@ function AuthPage() {
         });
         if (error) throw error;
         toast.success("Account created. Check your email if confirmation is required.");
-        navigate({ to: "/dashboard" });
+        setConfirmationSent(true);
+        setMode("signin");
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
@@ -86,44 +98,125 @@ function AuthPage() {
 
         <div className="rounded-3xl border-2 border-border bg-surface p-8 shadow-card">
           <h1 className="font-display text-2xl font-bold">
-            {mode === "signup" ? "Start your business dashboard" : "Welcome back"}
+            {mode === "signup"
+              ? "Start your business dashboard"
+              : mode === "reset"
+                ? "Reset your password"
+                : "Welcome back"}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {mode === "signup" ? "One minute to your own booking link." : "Sign in to Flowline."}
+            {mode === "signup"
+              ? "One minute to your own booking link."
+              : mode === "reset"
+                ? "We will email you a secure password reset link."
+                : "Sign in to Flowline."}
           </p>
 
-          <Button type="button" variant="outline" className="mt-6 w-full rounded-2xl border-2" disabled={loading} onClick={handleGoogle}>
-            <svg className="mr-2 size-4" viewBox="0 0 24 24"><path fill="currentColor" d="M12 10.2v3.9h5.5c-.2 1.4-1.6 4.1-5.5 4.1a6.2 6.2 0 1 1 0-12.4 5.6 5.6 0 0 1 4 1.5l2.7-2.6A9.7 9.7 0 0 0 12 2a10 10 0 1 0 0 20c5.8 0 9.6-4.1 9.6-9.8 0-.7 0-1.3-.2-2H12z"/></svg>
+          <Button
+            type="button"
+            variant="outline"
+            className="mt-6 w-full rounded-2xl border-2"
+            disabled={loading}
+            onClick={handleGoogle}
+          >
+            <svg className="mr-2 size-4" viewBox="0 0 24 24">
+              <path
+                fill="currentColor"
+                d="M12 10.2v3.9h5.5c-.2 1.4-1.6 4.1-5.5 4.1a6.2 6.2 0 1 1 0-12.4 5.6 5.6 0 0 1 4 1.5l2.7-2.6A9.7 9.7 0 0 0 12 2a10 10 0 1 0 0 20c5.8 0 9.6-4.1 9.6-9.8 0-.7 0-1.3-.2-2H12z"
+              />
+            </svg>
             Continue with Google
           </Button>
 
           <div className="my-6 flex items-center gap-3 text-xs text-muted-foreground">
-            <span className="h-px flex-1 bg-border" /> or email <span className="h-px flex-1 bg-border" />
+            <span className="h-px flex-1 bg-border" /> or email{" "}
+            <span className="h-px flex-1 bg-border" />
           </div>
 
           <form onSubmit={handleEmail} className="space-y-4">
             {mode === "signup" && (
               <div>
                 <Label htmlFor="biz">Business name</Label>
-                <Input id="biz" required value={businessName} onChange={(e) => setBusinessName(e.target.value)} placeholder="Marcus Plumbing" className="mt-1.5 rounded-xl" />
+                <Input
+                  id="biz"
+                  required
+                  value={businessName}
+                  onChange={(e) => setBusinessName(e.target.value)}
+                  placeholder="Marcus Plumbing"
+                  className="mt-1.5 rounded-xl"
+                />
               </div>
             )}
             <div>
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1.5 rounded-xl" />
+              <Input
+                id="email"
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="mt-1.5 rounded-xl"
+              />
             </div>
-            <div>
-              <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} className="mt-1.5 rounded-xl" />
-            </div>
-            <Button type="submit" disabled={loading} className="w-full rounded-2xl bg-primary text-primary-foreground shadow-brand">
-              {loading ? "Working…" : mode === "signup" ? "Create account" : "Sign in"}
+            {mode !== "reset" && (
+              <div>
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  required
+                  minLength={6}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="mt-1.5 rounded-xl"
+                />
+              </div>
+            )}
+            <Button
+              type="submit"
+              disabled={loading}
+              className="w-full rounded-2xl bg-primary text-primary-foreground shadow-brand"
+            >
+              {loading
+                ? "Working…"
+                : mode === "signup"
+                  ? "Create account"
+                  : mode === "reset"
+                    ? "Send reset link"
+                    : "Sign in"}
             </Button>
           </form>
 
+          {confirmationSent && mode === "signin" && (
+            <button
+              type="button"
+              onClick={async () => {
+                const { error } = await supabase.auth.resend({ type: "signup", email });
+                if (error) toast.error(error.message);
+                else toast.success("Confirmation email sent.");
+              }}
+              className="mt-4 w-full text-sm font-semibold text-primary"
+            >
+              Resend confirmation email
+            </button>
+          )}
+          {mode === "signin" && (
+            <button
+              type="button"
+              onClick={() => setMode("reset")}
+              className="mt-3 w-full text-sm text-muted-foreground hover:text-foreground"
+            >
+              Forgot password?
+            </button>
+          )}
+
           <p className="mt-6 text-center text-sm text-muted-foreground">
             {mode === "signup" ? "Already have an account? " : "New to Flowline? "}
-            <button type="button" onClick={() => setMode(mode === "signup" ? "signin" : "signup")} className="font-semibold text-primary hover:underline">
+            <button
+              type="button"
+              onClick={() => setMode(mode === "signup" ? "signin" : "signup")}
+              className="font-semibold text-primary hover:underline"
+            >
               {mode === "signup" ? "Sign in" : "Create one"}
             </button>
           </p>
